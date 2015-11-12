@@ -2,7 +2,7 @@
 Author: Herb Yang March 9, 2010. Based on a version originally written by Daniel Neilson.
 Updated: Oct. 11, 2015
 */
-
+#include <iostream>
 #include "scene.h"
 #include "sphere.h"
 #include "pointlight.h"
@@ -101,7 +101,8 @@ double Scene::rayToLight(Ray *ray, Vector3 *point, PointLight *ptLight )
 	// Return includes a ray (ray) and the
 	// distance from point to the point light
     double distance =0.0f;
-    
+	ray = &createRay(ptLight->posn, *point);
+	distance = ray->distance(ptLight->posn);
     return distance;
 }
 // return the color of light if there is no obstructing object
@@ -116,12 +117,21 @@ Color Scene::getPointLightColor(Ray *ray, PointLight *ptLight, double distance)/
     Color col;
     col = Color(0.,0.,0.);
     // complete this function
-
-
+	geomObj* tmpObj = geomObj::list;
+	while (tmpObj != 0)
+	{
+		RTfloat check;
+		if (!tmpObj->intersect(&check, ray, F_EPSILON, F_INFINITY)) {
+			col = ptLight->col;
+			break;
+		}
+		tmpObj = tmpObj->next;
+	}
     return(col);
 }
 void Scene::trace(Ray * ray, Color *col, Camera *cam)
 {
+	
     RTfloat t, minT,  dist;
     Vector3 point;
     Vector3 normal;
@@ -150,6 +160,19 @@ geomObj* Scene::findFirstIntersection( Ray *ray, RTfloat *k,
                                        RTfloat k0, RTfloat k1) {
     geomObj * hitObj = 0;
     // complete this function
+	geomObj* tmpObj = geomObj::list;
+	RTfloat minK = k1;
+	while (tmpObj != 0)
+	{
+		RTfloat check;
+		if (tmpObj->intersect(&check, ray, k0, k1)) {
+			if (check < minK)
+			{
+				hitObj = tmpObj;
+			}
+		}
+		tmpObj = tmpObj->next;
+	}
 
 
     return hitObj;
