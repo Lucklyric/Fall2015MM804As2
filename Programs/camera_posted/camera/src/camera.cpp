@@ -79,6 +79,9 @@ void Camera::createONB(const Vector3& a, const Vector3& b)
 {
 
    // add code to this function
+	basis.w = (a/a.norm())*-1;
+	basis.u = b.cross(basis.w) / (b.cross(basis.w).norm());
+	basis.v = basis.w.cross(basis.u);
 	
 }
 // transform from the camera coordinate system to the world coordinate system
@@ -86,7 +89,9 @@ Vector3 Camera::fromCameraToWorld(Vector3 & p)
 {
 	Vector3 a; 
     // add code to this function
-	
+	a.x = p.x*basis.u.x + p.y*basis.v.x + p.z*basis.w.x;
+	a.y = p.x*basis.u.y + p.y*basis.v.y + p.z*basis.w.y;
+	a.z = p.x*basis.u.z + p.y*basis.v.z + p.z*basis.w.z;
 	return a;
 }
 
