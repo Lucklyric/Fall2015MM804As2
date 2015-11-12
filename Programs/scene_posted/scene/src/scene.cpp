@@ -74,7 +74,7 @@ void Scene::shade(Color *shading,  // shading is the return result
 			{
 				if (!lit) // add ambient
 				{
-					(*shading) = objToLight->getAmbient() * ambient_light;
+					(*shading) += objToLight->getAmbient() * ambient_light;
 				}
 			}
 		}
