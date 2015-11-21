@@ -36,6 +36,8 @@ void Scene::shade(Color *shading,  // shading is the return result
 	lit = false;				// set the point not lit yet
 	if (objToLight)// if not null
 	{
+		// added below - Nov. 12, 2015
+		(*shading) += objToLight->getAmbient() * ambient_light;
 		for (i = 0; i<(int)lightList.size(); i++)						// go through each light source
 		{
 			double t = rayToLight(&ray, point, &lightList[i]);	// ray is the return ray from the point of intersection to the light source, t is the distance
@@ -70,13 +72,13 @@ void Scene::shade(Color *shading,  // shading is the return result
 				}
 
 			} // end if (lightToNormal>0)
-			else // in here, the point cannot recieve light
-			{
-				if (!lit) // add ambient
-				{
-					(*shading) += objToLight->getAmbient() * ambient_light;
-				}
-			}
+			  //else // in here, the point cannot recieve light
+			  //{
+			  //	if (!lit) // add ambient
+			  //	{
+			  //		(*shading) = objToLight->getAmbient() * ambient_light;
+			  //	}
+			  //}
 		}
 
 	}
@@ -90,18 +92,17 @@ void Scene::shade(Color *shading,  // shading is the return result
 		depth--;
 	}
 } // shade()
-//
-// create a ray from point to ptLight
-// return is the distance from point to ptLight
-//
-
+  //
+  // create a ray from point to ptLight
+  // return is the distance from point to ptLight
+  //
 double Scene::rayToLight(Ray *ray, Vector3 *point, PointLight *ptLight )
 {
 	// creates ray from point to point light ptLight.
 	// Return includes a ray (ray) and the
 	// distance from point to the point light
     double distance =0.0f;
-	ray = &createRay(ptLight->posn, *point);
+	*ray = createRay(ptLight->posn, *point);
 	distance = ray->distance(ptLight->posn);
     return distance;
 }
@@ -117,21 +118,28 @@ Color Scene::getPointLightColor(Ray *ray, PointLight *ptLight, double distance)/
     Color col;
     col = Color(0.,0.,0.);
     // complete this function
+	bool ifOb = false;
 	geomObj* tmpObj = geomObj::list;
 	while (tmpObj != 0)
 	{
 		RTfloat check;
-		if (!tmpObj->intersect(&check, ray, F_EPSILON, F_INFINITY)) {
-			col = ptLight->col;
-			break;
+		if (tmpObj->intersect(&check, ray, F_EPSILON, F_INFINITY)) {
+			if (F_GT(check,0) && F_LT(check , distance))
+			{
+				ifOb = true;
+				break;
+			}
 		}
 		tmpObj = tmpObj->next;
+	}
+	if (!ifOb)
+	{
+		col = ptLight->col;
 	}
     return(col);
 }
 void Scene::trace(Ray * ray, Color *col, Camera *cam)
 {
-	
     RTfloat t, minT,  dist;
     Vector3 point;
     Vector3 normal;
@@ -166,15 +174,15 @@ geomObj* Scene::findFirstIntersection( Ray *ray, RTfloat *k,
 	{
 		RTfloat check;
 		if (tmpObj->intersect(&check, ray, k0, k1)) {
-			if (check < minK)
+			if (F_LT(check , minK))
 			{
 				hitObj = tmpObj;
+				minK = check;
 			}
 		}
 		tmpObj = tmpObj->next;
 	}
-
-
+	*k = minK;
     return hitObj;
 } // findFirstIntersection()
 Ray Scene::reflectedRay(Ray inc_ray,// incoming ray
@@ -183,7 +191,8 @@ Ray Scene::reflectedRay(Ray inc_ray,// incoming ray
 {
     Ray rRay;
    // complete this function
-
+	Vector3 reflectedVector = inc_ray.reflectedDirection(normal);
+	rRay = createRay(point + reflectedVector, point);
     return rRay;
 } // reflected Ray
 double Scene::cosViewerToReflectedRay( // returns the cosine of the angle between the viewer and the reflected ray
@@ -195,5 +204,9 @@ double Scene::cosViewerToReflectedRay( // returns the cosine of the angle betwee
     Vector3 directionToViewer, tempV, reflectedLightVector;
     double dn =0.0f;
     // complete this function
+	reflectedLightVector = -(reflectedRay(ray, point, normal).d);
+	directionToViewer = (cam.eye - point);
+	directionToViewer.normalize();
+	dn = ((reflectedLightVector.dot(directionToViewer)) / (reflectedLightVector.length()*directionToViewer.length()));
     return dn;
 }
