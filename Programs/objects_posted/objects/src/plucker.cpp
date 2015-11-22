@@ -12,11 +12,14 @@ Plucker::Plucker(){
 
 Plucker::Plucker(Vector3 a, Vector3 b){
     // complete this constructor
-
+	a.normalize();
+	this->d = a;
+	this->m = a.cross(b);
 }
 // compute the permutted inner product of two lines L1%L2
 double Plucker::operator% (const Plucker& v) const{
 	double a = 0.0;
    // complete this function
+	a = (this->m) % v.d + (v.m) % this->d;
 	return a;
 }

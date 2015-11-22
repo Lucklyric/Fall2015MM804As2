@@ -43,10 +43,25 @@ bool Poly::isDiffuse()
 //    Plucker test to check if the ray goes through the object
 // ========================================================================
 bool Poly::pluckerTest(Ray *ray){
-	bool flag = false;
+	bool flag = true;
 	// complete this function
-
-	return false;
+	Plucker rayP = Plucker(ray->d,ray->o);
+	for (int j = 0; j < nVertices; j++) {
+		Vector3 p = this->vertices[j];
+		Vector3 d;
+		if (j == (nVertices - 1)) {
+			d = this->vertices[0] - this->vertices[j];
+		}
+		else{
+			d = this->vertices[j + 1] - this->vertices[j];
+		}
+		Plucker slideP = Plucker(d, p);
+		double value = rayP % slideP;
+		if (value <= 0) {
+			return false;
+		}
+	}
+	return flag;
 }
 
 // Find and return, in k, the earliest intersection point, in the
@@ -56,7 +71,23 @@ bool Poly::intersect(RTfloat *k,  Ray *ray, RTfloat k0,  RTfloat k1)
 {
 	bool flag = false;
     // complete this function
-
+	if (!pluckerTest(ray))
+	{
+		return false;
+	}
+	RTfloat t;
+	Vector3 p;
+	if ((ray->d % this->normal) >= 0)
+	{
+		return false;
+	}
+	t = ((this->vertices[0] - ray->o) % this->normal) / (ray->d % this->normal);
+	p = (ray->o - this->vertices[0]) + t*ray->d;
+	if ((t > k0) && (t < k1))
+	{
+		*k = t;
+		return true;
+	}
 	return flag;
 } // intersect()
 // getDiffuse() - return the diffuse coefficient

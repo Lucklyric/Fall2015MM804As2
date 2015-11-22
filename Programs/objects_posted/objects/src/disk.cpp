@@ -36,8 +36,23 @@ bool Disk::intersect(RTfloat *k,  Ray *ray, RTfloat k0,  RTfloat k1)
 {
 	bool flag = false; // intersection flag
 	// complete this function
-
-
+	RTfloat t;
+	Vector3 p;
+	if ((ray->d % this->normal)>=0)
+	{
+		return false;
+	}
+	t = ((this->center - ray->o) % this->normal) / (ray->d % this->normal);
+	p = (ray->o - this->center) + t*ray->d;
+	if (sqrt(p%p) >= (this->rad))
+	{
+		return false;
+	}
+	if ((t > k0) && (t < k1))
+	{
+		*k = t;
+		return true;
+	}
     return flag;
 } // intersect()
 // getDiffuse() - return the diffuse coefficient
